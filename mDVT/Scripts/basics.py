@@ -2171,28 +2171,48 @@ def connect_by_trajectory_distance(trajectoryDF, trajectoryGroup, frames_spaced_
     # 行名是非终止的ID，列名是非起始的ID
     trajectoryGroup = trajectoryGroup.sort_values(['range'], ascending=False)
     frame_max = trajectoryDF['frame'].max()
-    to_IDs= trajectoryGroup['id'][trajectoryGroup['min'] != 1].to_list()
-    from_IDs = trajectoryGroup['id'][trajectoryGroup['max'] != frame_max].to_list()
+    to_IDs = trajectoryGroup['id'][trajectoryGroup['min'] != 1].to_list() # 所有非起始轨迹，按照轨迹长度排序
+    from_IDs = trajectoryGroup['id'][trajectoryGroup['max'] != frame_max].to_list() # 所有非终止轨迹，按照轨迹长度排序
     spaced_frames_mat = pd.DataFrame(columns=to_IDs, index=from_IDs)
     for i in from_IDs:
         for j in to_IDs:
             if i == j:
                 spaced_frames_mat.loc[i,j] = frame_max
             else:
-                spaced_frames_mat.loc[i,j] = abs(trajectoryGroup.loc[trajectoryGroup['id'] == i, 'max'].to_list()[0] - trajectoryGroup.loc[trajectoryGroup['id'] == j, 'min'].to_list()[0])
+                # To ID 的max必须要大于 From ID的max，否则设置为最大frame_max
+                if trajectoryGroup.loc[trajectoryGroup['id'] == j, 'max'].to_list()[0] > trajectoryGroup.loc[trajectoryGroup['id'] == i, 'max'].to_list()[0]:
+                    spaced_frames_mat.loc[i,j] = abs(trajectoryGroup.loc[trajectoryGroup['id'] == i, 'max'].to_list()[0] - trajectoryGroup.loc[trajectoryGroup['id'] == j, 'min'].to_list()[0])
+                else:
+                    spaced_frames_mat.loc[i, j] = frame_max
     From_IDs = []
     To_IDs = []
     frames_spaced = []
-    for a_from_ID in spaced_frames_mat.index:
-        raw_dict = spaced_frames_mat.loc[a_from_ID].to_dict()
-        sorted_dict = dict(sorted(raw_dict.items(), key=lambda item: item[1]))
-        # 另外，先到先得，如果a和b都是与A最近，若a先出现，则设定a与A相连，b只能与第二最近的相连
-        for a_to_ID_candidate in list(sorted_dict.keys()):
-            if a_to_ID_candidate not in To_IDs:
-                From_IDs.append(a_from_ID)
-                To_IDs.append(a_to_ID_candidate)
-                frames_spaced.append(sorted_dict[a_to_ID_candidate])
-                break
+    # 默认先从最长的轨迹开始找下游轨迹，然后对于找到的下游轨迹进行加塞
+    # 比如，如果某个To_ID不是终止轨迹，那么优先找该轨迹的下游轨迹，这样有助于排除掉一些无用的上游轨迹的干扰
+    for a_from_ID in spaced_frames_mat.index: #
+        if a_from_ID not in From_IDs:
+            raw_dict = spaced_frames_mat.loc[a_from_ID].to_dict()
+            sorted_dict = dict(sorted(raw_dict.items(), key=lambda item: item[1]))
+            # 另外，先到先得，如果a和b都是与A最近，若a先出现，则设定a与A相连，b只能与第二最近的相连
+            for a_to_ID_candidate in list(sorted_dict.keys()):
+                if a_to_ID_candidate not in To_IDs:
+                    From_IDs.append(a_from_ID)
+                    To_IDs.append(a_to_ID_candidate)
+                    frames_spaced.append(sorted_dict[a_to_ID_candidate])
+                    break
+            # 如果这个To_ID不是终止轨迹，也没有找过下游轨迹
+            while (To_IDs[-1] not in From_IDs) and (To_IDs[-1] in from_IDs):
+                raw_dict = spaced_frames_mat.loc[To_IDs[-1]].to_dict()
+                sorted_dict = dict(sorted(raw_dict.items(), key=lambda item: item[1]))
+                # 另外，先到先得，如果a和b都是与A最近，若a先出现，则设定a与A相连，b只能与第二最近的相连
+                for a_to_ID_candidate in list(sorted_dict.keys()):
+                    if a_to_ID_candidate not in To_IDs:
+                        From_IDs.append(To_IDs[-1])
+                        To_IDs.append(a_to_ID_candidate)
+                        frames_spaced.append(sorted_dict[a_to_ID_candidate])
+                        break
+        else:
+            continue
     paired_trajectory_df = pd.DataFrame()
     paired_trajectory_df['From_ID'] = From_IDs
     paired_trajectory_df['To_ID'] = To_IDs
@@ -2330,10 +2350,11 @@ def update_Trajectory_IDs(trajectoryDF, Solved_trajectoryGroup):
     Solved_trajectoryGroup_full = Solved_trajectoryGroup[(Solved_trajectoryGroup['min'] == 1) & (Solved_trajectoryGroup['max'] == trajectoryDF['frame'].max())]
     # 去除未解决的trajectory
     trajectoryGroup_unSolved = Solved_trajectoryGroup[~((Solved_trajectoryGroup['min'] == 1) & (Solved_trajectoryGroup['max'] == trajectoryDF['frame'].max()))]
-    for index, row in trajectoryGroup_unSolved.iterrows():
-        trajectoryDF = trajectoryDF[trajectoryDF['id'] != row['id']]
-
-    for index, row in Solved_trajectoryGroup_full.iterrows():
+    print("Total " + str(trajectoryGroup_unSolved['range'].sum()) + " frames from unsolved trajectory will be removed!")
+    for _, row in trajectoryGroup_unSolved.iterrows():
+        for A_ID in row['Included_trajectory_ID']:
+            trajectoryDF = trajectoryDF[trajectoryDF['id'] != A_ID]
+    for _, row in Solved_trajectoryGroup_full.iterrows():
         for A_ID in row['Included_trajectory_ID']:
             trajectoryDF.loc[trajectoryDF['id'] == A_ID, 'id'] = row['id']
     # 去除重复的

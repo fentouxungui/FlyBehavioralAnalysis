@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import cv2
 
-from basics import (read_yolo_track, remove_outlier_boxes, object_number_check, repair_end_frames, remove_short_trajectory, rename_id,
+from mDVT.Scripts.basics import (read_yolo_track, remove_outlier_boxes, object_number_check, repair_end_frames, remove_short_trajectory, rename_id,
                     remove_redundant_frames, join_trajectory, update_Trajectory_IDs, simple_fill_all_gaps, format_trajectory_to_DVT,
                     cal_velocity_from_position)
 
@@ -13,16 +13,12 @@ pd.set_option("display.max_rows", None)
 pd.set_option('display.expand_frame_repr', False)
 
 # 文件路径
-# ## 包括yolo的输出结果和metadata.csv文件
-#Yolo_outputs_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\input-yolo-track-results\\sh"
-Yolo_outputs_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\input-yolo-track-results\\W1118-Rep1"
+# 包括yolo的输出结果和metadata.csv文件
+Yolo_outputs_dir = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\YoloBytetrackOutputs\\W1118-Rep2'
 # ## 用于track的视频，一般是30min
-#clean_video_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\input-clean-video\\sh"
-clean_video_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\input-clean-video\\W1118-Rep1"
-# ## 输出结果的存储目录，包括position文件、修正后metadata文件以及arena edge的图示文件、数据质量logs
-#output_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\outputs\\sh"
-output_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\outputs\\W1118-Rep1"
-## 包括yolo的输出结果和metadata.csv文件
+clean_video_dir = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\ClippedVideo\\W1118-Rep2'
+# 输出结果的存储目录，包括position文件、修正后metadata文件以及arena edge的图示文件、数据质量logs
+output_dir = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\RevisedDataForDVT\\w1118-Rep2'
 
 # 参数
 ## 果蝇数目
@@ -41,10 +37,10 @@ print("Results directory found!") if os.path.exists(output_dir) else os.mkdir(ou
 
 # 测试，不去除short trajectory, 并且全部smooth填充所有gap。
 # 经过比较test1[去除short trajectory和不填充]和test2[不去除short，做填充]，发现test2整体上与DVT结果线性更好！
-# 但是考虑到remove extrad id for frames工作量太大，还是决定去除short trajectory
+# 但是考虑到remove extra id for frames工作量太大，还是决定去除short trajectory
 log_filename = os.path.join(output_dir, 's1_logs.csv')
 
-track_file = yolo_track_files[4] # for test
+track_file = yolo_track_files[0] # for test
 
 video_filename = track_file[:track_file.rfind(".")] + ".mp4"
 cap = cv2.VideoCapture(os.path.join(clean_video_dir, video_filename))

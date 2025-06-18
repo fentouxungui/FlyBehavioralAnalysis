@@ -10,7 +10,7 @@ pd.set_option('display.max_columns', None)
 pd.set_option("display.max_rows", None)
 
 # dvt_output_filepath = 'D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\outputs\\sh'
-dvt_output_filepath = 'D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\outputs\\W1118-Rep1'
+dvt_output_filepath = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\RevisedDataForDVT\\w1118-Rep2'
 meta_filename = 'metadata.csv'
 
 meta_filepath = os.path.join(dvt_output_filepath, meta_filename)

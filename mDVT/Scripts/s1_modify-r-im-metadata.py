@@ -7,11 +7,8 @@ import os
 pd.set_option('display.max_columns', None)
 pd.set_option("display.max_rows", None)
 
-# dvt_output_filepath = 'D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\outputs\\sh'
-# raw_meta_filepath = 'D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\input-yolo-track-results\\sh\\metadata.csv'
-
-dvt_output_filepath = 'D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\outputs\\W1118-Rep1'
-raw_meta_filepath = 'D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\input-yolo-track-results\\W1118-Rep1\\metadata.csv'
+dvt_output_filepath = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\RevisedDataForDVT\\w1118-Rep2'
+raw_meta_filepath = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\RevisedDataForDVT\\w1118-Rep2\\metadata.csv'
 
 meta_df = pd.read_csv(raw_meta_filepath, index_col = 0)
 fly_numbers = 6

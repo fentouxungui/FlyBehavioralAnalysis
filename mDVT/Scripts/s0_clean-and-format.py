@@ -12,16 +12,12 @@ pd.set_option("display.max_rows", None)
 pd.set_option('display.expand_frame_repr', False)
 
 # 文件路径
-# ## 包括yolo的输出结果和metadata.csv文件
-#Yolo_outputs_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\input-yolo-track-results\\sh"
-Yolo_outputs_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\input-yolo-track-results\\W1118-Rep1"
+# 包括yolo的输出结果和metadata.csv文件
+Yolo_outputs_dir = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\YoloBytetrackOutputs\\W1118-Rep2'
 # ## 用于track的视频，一般是30min
-#clean_video_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\input-clean-video\\sh"
-clean_video_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\input-clean-video\\W1118-Rep1"
-# ## 输出结果的存储目录，包括position文件、修正后metadata文件以及arena edge的图示文件、数据质量logs
-#output_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\outputs\\sh"
-output_dir = "D:\\GitHub_Res\\BehavioralVideoAnalysis\\MyScripts\\YoloTrack-to-DVT-scale1\\outputs\\W1118-Rep1"
-## 包括yolo的输出结果和metadata.csv文件
+clean_video_dir = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\ClippedVideo\\W1118-Rep2'
+# 输出结果的存储目录，包括position文件、修正后metadata文件以及arena edge的图示文件、数据质量logs
+output_dir = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\RevisedDataForDVT\\w1118-Rep2'
 
 # 参数
 ## 果蝇数目

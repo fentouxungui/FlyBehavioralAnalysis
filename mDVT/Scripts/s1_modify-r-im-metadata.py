@@ -8,7 +8,7 @@ pd.set_option('display.max_columns', None)
 pd.set_option("display.max_rows", None)
 
 dvt_output_filepath = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\RevisedDataForDVT\\w1118-Rep2'
-raw_meta_filepath = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\RevisedDataForDVT\\w1118-Rep2\\metadata.csv'
+raw_meta_filepath = 'D:\\GitHub_Res\\FlyBehavioralAnalysis\\mDVT\\Data\\YoloBytetrackOutputs\\w1118-Rep2\\metadata.csv'
 
 meta_df = pd.read_csv(raw_meta_filepath, index_col = 0)
 fly_numbers = 6

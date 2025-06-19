@@ -51,6 +51,7 @@ def read_yolo_track(path, object_number=None, header=None, mode=None):
         track_res.columns = ['frame', 'category', 'x', 'y', 'w', 'h', 'id']
     else:
         print('Rename column names escaped! please check the column names manually.')
+    check_NaN_values(df=track_res)
     box_area = np.multiply(track_res['w'], track_res['h']).to_numpy()
     box_area = np.round(box_area, 7)
     track_res = track_res.assign(BoxArea=box_area)
@@ -1111,14 +1112,17 @@ def get_frames_gaps(frames, max, min=1):
     return sorted(list(set(range(min, max + 1)) - set(frames)))
 
 
-def parallel_group_gaps(trajectoryDF, group_by, frame_start=1, cores=4, cut=1):
+def parallel_group_gaps(trajectoryDF, group_by, frame_start=1, frame_end=0, cores=4, cut=1):
     """
     多线程方式，对 dataframe依据id进行分组，然后得到每个ID所有trajectory【连续frame】的range信息，包括起始位置，终止位置，长度
+    可与手动设置frame_start和frame_end参数，有时gap出现于头或尾
+    如果首尾都是齐整的，无需设置frame_start和frame_end
     return: a pandas dataframe
     """
-
+    if frame_end == 0:
+        frame_end = trajectoryDF['frame'].max()
     def data_process(name, group):
-        res = group_numbers(get_frames_gaps(group['frame'].tolist(), max=trajectoryDF['frame'].max(), min=frame_start), cut=cut)
+        res = group_numbers(get_frames_gaps(group['frame'].tolist(), max=frame_end, min=frame_start), cut=cut)
         res = res.assign(id=name)
         return res
 
@@ -1962,8 +1966,26 @@ def check_score(df, cutoff):
             index_qualified.append(i)
     return df.loc[index_qualified]
 
+def check_NaN_values(df):
+    NaN_rows = df[df.isnull().any(axis=1)]
+    if NaN_rows.empty:
+        print("Great: No NaN values found!")
+    else:
+        print("Found NaN values bellow:")
+        print(NaN_rows)
+        raise Exception("Error: found NaN values in trajectory file!")
+
 
 def format_trajectory_to_DVT(trajectoryDF, object_number, video_width=1920, video_height=1080, format=['xywhn', 'xywh'][0]):
+    # NaN values is not allowed
+    check_NaN_values(df=trajectoryDF[['frame', 'x', 'y', 'w', 'h', 'id']])
+    # 所有ID是否都是完整的
+    if (trajectoryDF['id'].value_counts() == trajectoryDF['frame'].max()).all():
+        print("Great, all ids has full data!")
+    else:
+        print("Error: some ids are truncated, please check bellow:")
+        print(trajectoryDF['id'].value_counts())
+        raise Exception("Error: some ids are truncated!")
     # columns to be: position,x0,y0,x1,y1,x2,y2,x3,y3,x4,y4,x5,y5
     # position correspond to frame,but should start from 0
     total_frames = trajectoryDF['frame'].max()
@@ -2463,15 +2485,16 @@ def simple_fill_all_gaps(trajectoryDF, gap_length_cutoff=100, cores=4):
 
 
 def fill_by_neighbour(trajectoryDF, frame_from, frame_to, gap_id, NN_id, cores=4):
-    # 如果 NN 无gap
+    # 直接把邻居的加进来
     NN_frames = trajectoryDF[(trajectoryDF['id'] == NN_id) & (trajectoryDF['frame'] >= frame_from) & (trajectoryDF['frame'] <= frame_to)]
     NN_frames = NN_frames.assign(id=gap_id)
+    trajectoryDF = pd.concat([trajectoryDF, NN_frames], ignore_index=False)
+    # 如果 NN 有gap，则进行smooth insert
     if NN_frames.shape[0] != (frame_to - frame_from + 1):
      # 如果 NN 有gap，混合填充
-        NN_gapsDF = parallel_group_gaps(trajectoryDF=NN_frames, group_by='id', frame_start=NN_frames['frame'].min(), cores=cores, cut=1)
+        NN_gapsDF = parallel_group_gaps(trajectoryDF=NN_frames, group_by='id', frame_start=frame_from, frame_end=frame_to, cores=cores, cut=1)
         for index, row in NN_gapsDF.iterrows():
-            NN_frames = smooth_insert(trajectoryDF=NN_frames, new_id=row['id'], lost_id=row['id'], new_id_frame=row['max'] + 1, lost_id_frame=row['min'] - 1)
-    trajectoryDF = pd.concat([trajectoryDF, NN_frames], ignore_index=False)
+            trajectoryDF = smooth_insert(trajectoryDF=trajectoryDF, new_id=row['id'], lost_id=row['id'], new_id_frame=row['max'] + 1, lost_id_frame=row['min'] - 1)
     return trajectoryDF
 
 

@@ -4,7 +4,7 @@ import cv2
 
 from mDVT.Scripts.basics import (read_yolo_track, remove_outlier_boxes, object_number_check, repair_end_frames, remove_short_trajectory, rename_id,
                     remove_redundant_frames, join_trajectory, update_Trajectory_IDs, simple_fill_all_gaps, format_trajectory_to_DVT,
-                    cal_velocity_from_position)
+                    cal_velocity_from_position, check_NaN_values)
 
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -40,7 +40,7 @@ print("Results directory found!") if os.path.exists(output_dir) else os.mkdir(ou
 # 但是考虑到remove extra id for frames工作量太大，还是决定去除short trajectory
 log_filename = os.path.join(output_dir, 's1_logs.csv')
 
-track_file = yolo_track_files[0] # for test
+track_file = yolo_track_files[45] # for test
 
 video_filename = track_file[:track_file.rfind(".")] + ".mp4"
 cap = cv2.VideoCapture(os.path.join(clean_video_dir, video_filename))
@@ -109,12 +109,14 @@ track_res = update_Trajectory_IDs(trajectoryDF=track_res, Solved_trajectoryGroup
 # 两种方式，如果gap长度大于gap_length_cutoff，并且能找到两端frame对应的最近ID是一致的，则使用混合填充，即smooth insert 和 NN fill，否者都使用smooth insert
 track_res = simple_fill_all_gaps(trajectoryDF=track_res, gap_length_cutoff=100, cores=4)
 
+
 # 导出
 # step4: reformat
 dvt_coordinates = format_trajectory_to_DVT(trajectoryDF=track_res,
                                            object_number=object_number,
                                            video_width=video_width,
                                            video_height=video_height)
+
 
 # 检查是否有大的跳跃
 velocity_df = cal_velocity_from_position(pos=dvt_coordinates, n_inds=object_number, fps=30, scaling_to_mm=1)
